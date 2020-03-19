@@ -1,12 +1,13 @@
 import express from "express";
 import { query } from "../db";
-import { LIST_ALL_SHOWS } from "./queries";
+import { LIST_MOVIE_SHOWTIMES } from "./queries";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const { rows } = await query(LIST_ALL_SHOWS, null);
+    const { id } = req.params;
+    const { rows } = await query(LIST_MOVIE_SHOWTIMES, [id]);
     res.send(rows);
   } catch (e) {
     console.log("error", e);

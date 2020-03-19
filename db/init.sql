@@ -44,6 +44,8 @@ INSERT INTO shows (movie_id, hall_id, show_time) VALUES (2, 1, '23:30');
 INSERT INTO shows (movie_id, hall_id, show_time) VALUES (3, 2, '10:00');
 INSERT INTO shows (movie_id, hall_id, show_time) VALUES (3, 2, '16:00');
 INSERT INTO shows (movie_id, hall_id, show_time) VALUES (3, 2, '22:00');
+insert into shows (movie_id, hall_id, show_time) values (1, 2, '09:00');
+insert into shows (movie_id, hall_id, show_time) values (1, 1, '08:00');
 
 
 
