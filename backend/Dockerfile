@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:latest
 
 WORKDIR /app
 
@@ -15,5 +15,4 @@ COPY . .
 
 RUN npm run build
 
-# CMD ["/bin/bash"]
 CMD ["node", "./dist/server.js"]

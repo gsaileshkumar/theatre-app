@@ -2,8 +2,12 @@ import { Pool } from "pg";
 
 const pool = new Pool();
 
-const query = (text, params) => {
+const select = (text, params) => {
   return pool.query(text, params);
 };
 
-export { query };
+const insert = (text, callback) => {
+  return pool.query(text, callback);
+};
+
+export { select, insert };
