@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import shows from "./shows";
-import movies from "./movies";
-import showstatus from "./showstatus";
-import halls from "./halls";
+import shows from "./routes/shows";
+import movies from "./routes/movies";
+import showstatus from "./routes/showstatus";
+import halls from "./routes/halls";
 
 const app = express();
 const port = process.env.PORT || 3000;

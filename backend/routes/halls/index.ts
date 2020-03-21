@@ -1,7 +1,7 @@
 import express from "express";
 import { CREATE_HALL, GET_ALL_HALLS } from "./queries";
-import { select, insert } from "../db";
-import { RES_SUCCESS, RES_FAILURE } from "../model/response";
+import { select, insert } from "../../db";
+import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
 
 const router = express.Router();
 

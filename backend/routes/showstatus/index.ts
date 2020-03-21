@@ -1,7 +1,7 @@
 import express from "express";
-import { select } from "../db";
+import { select } from "../../db";
 import { GET_SHOW_AVAILABILITY, GET_HALL_DETAILS_BY_SHOW_ID } from "./queries";
-import { RES_SUCCESS, RES_FAILURE } from "../model/response";
+import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
 
 const router = express.Router();
 

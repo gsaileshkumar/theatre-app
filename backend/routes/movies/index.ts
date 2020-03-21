@@ -1,7 +1,7 @@
 import express from "express";
-import { select } from "../db";
-import { GET_MOVIE_SHOWTIMES, GET_ALL_MOVIES } from "./queries";
-import { RES_FAILURE, RES_SUCCESS } from "../model/response";
+import { select, insert } from "../../db";
+import { GET_MOVIE_SHOWTIMES, GET_ALL_MOVIES, CREATE_MOVIE } from "./queries";
+import { RES_FAILURE, RES_SUCCESS } from "../../model/response";
 
 const router = express.Router();
 
@@ -25,6 +25,26 @@ router.get("/", async (req, res) => {
       movies: rows
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
+  } catch (e) {
+    res.status(500).send({ ...RES_FAILURE, error: e });
+  }
+});
+
+router.post("/", async (req, res) => {
+  try {
+    const { name, ticket_price } = req.body;
+    const params = {
+      name,
+      ticket_price: parseInt(ticket_price)
+    };
+    const queryOptions = {
+      text: CREATE_MOVIE,
+      values: Object.values(params)
+    };
+    const { rowCount } = await insert(queryOptions, null);
+    if (rowCount === 1) {
+      res.status(200).send(RES_SUCCESS);
+    }
   } catch (e) {
     res.status(500).send({ ...RES_FAILURE, error: e });
   }
