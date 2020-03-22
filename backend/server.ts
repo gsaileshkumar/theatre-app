@@ -24,4 +24,10 @@ app.use("/movies", movies);
 app.use("/showstatus", showstatus);
 app.use("/halls", halls);
 
+app.use(function(req, res) {
+  return res.status(404).send({
+    status: "Route unavailable"
+  });
+});
+
 app.listen(port, () => console.log(`App listening on port ${port}!`));
