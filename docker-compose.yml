@@ -18,7 +18,7 @@ services:
       - db
     build: ./backend
     ports:
-      - "3001:3001"
+      - "3000:3000"
     environment:
       PGHOST: db
       PGUSER: postgres
