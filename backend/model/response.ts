@@ -5,3 +5,7 @@ export const RES_SUCCESS = {
 export const RES_FAILURE = {
   status: "Server error"
 };
+
+export const RES_UNAUTHORIZED = {
+  status: "Unauthorized"
+};
