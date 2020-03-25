@@ -23,6 +23,7 @@ router.post("/signup", async (req, res) => {
       name,
       email,
       password: hashedPass,
+      role: "USER",
       created_at: new Date()
     };
     const queryOptions = {
