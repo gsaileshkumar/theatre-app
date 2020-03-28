@@ -14,11 +14,13 @@ const port = process.env.PORT || 3000;
 app.use(
   cors({
     credentials: true,
-    origin: "http://localhost:4200"
+    origin: "https://theatreapi.saileshkumar.com"
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-app.use(session({ secret: "ohmysecret", cookie: { sameSite: "none" } }));
+app.use(
+  session({ secret: "ohmysecret", cookie: { sameSite: "none", secure: true } })
+);
 
 app.use("/auth", auth);
 
