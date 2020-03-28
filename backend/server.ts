@@ -19,7 +19,6 @@ app.use(
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
-app.set("trust proxy", 1);
 app.use(session({ secret: "ohmysecret" }));
 
 app.use("/auth", auth);
