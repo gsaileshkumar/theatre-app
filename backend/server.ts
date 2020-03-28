@@ -18,7 +18,7 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-app.use(session({ secret: "ohmysecret" }));
+app.use(session({ secret: "ohmysecret", cookie: { sameSite: "none" } }));
 
 app.use("/auth", auth);
 
