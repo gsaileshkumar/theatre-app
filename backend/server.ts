@@ -18,9 +18,9 @@ app.use(
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-app.use(
-  session({ secret: "ohmysecret", cookie: { sameSite: "none", secure: true } })
-);
+
+app.set("trust proxy", 1);
+app.use(session({ secret: "ohmysecret", cookie: { secure: true } }));
 
 app.use("/auth", auth);
 
