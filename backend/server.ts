@@ -13,7 +13,8 @@ const port = process.env.PORT || 3000;
 
 app.use(
   cors({
-    credentials: true
+    credentials: true,
+    origin: "http://localhost:4200"
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
