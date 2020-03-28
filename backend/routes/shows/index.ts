@@ -2,6 +2,7 @@ import express from "express";
 import { select, insert } from "../../db";
 import { GET_ALL_SHOWS, CREATE_SHOW } from "./queries";
 import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
+import { isAdminMiddleware } from "../../middleware/authorization";
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", isAdminMiddleware, async (req, res) => {
   try {
     const { movie_id, hall_id, show_time } = req.body;
     const params = {

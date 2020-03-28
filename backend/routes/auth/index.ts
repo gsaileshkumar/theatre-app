@@ -47,11 +47,12 @@ router.post("/login", async (req, res) => {
       email
     ]);
     if (userExists) {
-      const { id, password: hashedPassword } = rows[0] as any;
+      const { id, password: hashedPassword, role } = rows[0] as any;
       const match = await bcrypt.compare(password, hashedPassword);
       if (match) {
         const user = {
-          id
+          id,
+          role
         };
         req.session!.user = user;
         return res.status(200).send({ ...RES_SUCCESS, ...user });

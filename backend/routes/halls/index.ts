@@ -2,10 +2,11 @@ import express from "express";
 import { CREATE_HALL, GET_ALL_HALLS } from "./queries";
 import { select, insert } from "../../db";
 import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
+import { isAdminMiddleware } from "../../middleware/authorization";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", isAdminMiddleware, async (req, res) => {
   try {
     const { name, total_columns, total_rows } = req.body;
     const params = {

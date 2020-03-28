@@ -3,5 +3,5 @@ export const CREATE_USER = `
 `;
 
 export const GET_USER_BY_EMAIL = `
-    select id, password from users where email = $1
+    select id, password, role from users where email = $1
 `;
