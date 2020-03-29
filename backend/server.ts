@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true })); // for parsing application/x-ww
 
 app.use(
   session({
+    proxy: true,
     secret: "ohmysecret",
     cookie: { sameSite: "none", secure: true, httpOnly: true }
   })
