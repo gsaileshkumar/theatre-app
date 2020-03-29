@@ -14,7 +14,10 @@ const port = process.env.PORT || 3000;
 app.use(
   cors({
     credentials: true,
-    origin: "https://theatreapi.saileshkumar.com"
+    origin: [
+      "https://theatreapi.saileshkumar.com",
+      "https://theatrebooking.netlify.com"
+    ]
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
