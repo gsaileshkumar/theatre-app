@@ -10,4 +10,4 @@ const insert = (text, callback) => {
   return pool.query(text, callback);
 };
 
-export { select, insert };
+export { select, insert, pool };
