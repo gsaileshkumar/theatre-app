@@ -1,14 +1,14 @@
 export const GET_MOVIE_SHOWTIMES = `
-    select h.name, s.show_time, s.id as show_id from shows as s
-    inner join halls as h
-    on h.id = s.hall_id
-    where s.movie_id = $1
+    SELECT HALL_NAME, SHOW_TIME, SHOW_ID FROM SHOWS
+    INNER JOIN HALLS 
+    ON HALL_ID = SHOW_HALL_ID
+    WHERE SHOW_MOVIE_ID = $1
 `;
 
 export const GET_ALL_MOVIES = `
-    select * from movies
+    SELECT * FROM MOVIES
 `;
 
 export const CREATE_MOVIE = `
-    insert into movies (name, ticket_price) values ($1, $2)
+    INSERT INTO MOVIES (MOVIE_NAME, MOVIE_TICKET_PRICE, MOVIE_CREATED_BY, MOVIE_UPDATED_BY) VALUES ($1, $2, $3, $4)
 `;

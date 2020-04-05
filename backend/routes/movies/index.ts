@@ -11,7 +11,7 @@ router.get("/showtime", async (req, res) => {
     const { id } = req.query;
     const { rows } = await select(GET_MOVIE_SHOWTIMES, [id]);
     const response = {
-      movies: rows
+      movies: rows,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
@@ -23,7 +23,7 @@ router.get("/", async (req, res) => {
   try {
     const { rows } = await select(GET_ALL_MOVIES, null);
     const response = {
-      movies: rows
+      movies: rows,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
@@ -36,11 +36,13 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     const { name, ticket_price } = req.body;
     const params = {
       name,
-      ticket_price: parseInt(ticket_price)
+      ticket_price: parseInt(ticket_price),
+      created_by: req.session!.user.user_id,
+      updated_by: req.session!.user.user_id,
     };
     const queryOptions = {
       text: CREATE_MOVIE,
-      values: Object.values(params)
+      values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {

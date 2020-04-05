@@ -1,7 +1,7 @@
 export const CREATE_HALL = `
-    insert into halls (name, total_columns, total_rows) values ($1, $2, $3)
-    `;
+    INSERT INTO HALLS (HALL_NAME, HALL_TOTAL_COLUMNS, HALL_TOTAL_ROWS, HALL_CREATED_BY, HALL_UPDATED_BY) VALUES ($1, $2, $3, $4, $5)
+`;
 
 export const GET_ALL_HALLS = `
-    select * from halls
+    SELECT * FROM HALLS
 `;

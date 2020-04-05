@@ -8,8 +8,8 @@ const router = express.Router();
 
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
+    const { name, email, password, mobile } = req.body;
+    if (!name || !email || !password || !mobile) {
       return res.status(200).send(RES_FAILURE);
     }
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
@@ -23,12 +23,12 @@ router.post("/signup", async (req, res) => {
       name,
       email,
       password: hashedPass,
+      mobile,
       role: "USER",
-      created_at: new Date()
     };
     const queryOptions = {
       text: CREATE_USER,
-      values: Object.values(params)
+      values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {
@@ -36,7 +36,7 @@ router.post("/signup", async (req, res) => {
     }
     return res.status(200).send(RES_FAILURE);
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
@@ -44,15 +44,19 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const { rows, rowCount: userExists } = await select(GET_USER_BY_EMAIL, [
-      email
+      email.toUpperCase(),
     ]);
     if (userExists) {
-      const { id, password: hashedPassword, role } = rows[0] as any;
+      const {
+        user_id,
+        user_password: hashedPassword,
+        user_role,
+      } = rows[0] as any;
       const match = await bcrypt.compare(password, hashedPassword);
       if (match) {
         const user = {
-          id,
-          role
+          user_id,
+          user_role,
         };
         req.session!.user = user;
         return res.status(200).send({ ...RES_SUCCESS, ...user });
@@ -61,7 +65,7 @@ router.post("/login", async (req, res) => {
     }
     return res.status(200).send(RES_FAILURE);
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
@@ -71,7 +75,7 @@ router.post("/logout", async (req, res) => {
     res.clearCookie("connect.sid");
     return res.status(200).send({ ...RES_SUCCESS, message: "Logged out" });
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 

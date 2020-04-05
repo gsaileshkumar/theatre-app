@@ -1,7 +1,7 @@
 export const CREATE_USER = `
-    insert into users (name, email, password, role, created_at) values ($1, $2, $3, $4, $5)
+INSERT INTO USERS(USER_NAME, USER_EMAIL, USER_PASSWORD, USER_MOBILE_NUMBER, USER_ROLE) VALUES ($1, $2, $3, $4, $5)
 `;
 
 export const GET_USER_BY_EMAIL = `
-    select id, password, role from users where email = $1
+    SELECT USER_ID, USER_PASSWORD, USER_ROLE FROM USERS WHERE USER_EMAIL = $1
 `;

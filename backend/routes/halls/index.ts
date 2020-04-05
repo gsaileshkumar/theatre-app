@@ -12,11 +12,13 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     const params = {
       name,
       total_columns: parseInt(total_columns),
-      total_rows: parseInt(total_rows)
+      total_rows: parseInt(total_rows),
+      created_by: req.session!.user.user_id,
+      updated_by: req.session!.user.user_id,
     };
     const queryOptions = {
       text: CREATE_HALL,
-      values: Object.values(params)
+      values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {
@@ -31,7 +33,7 @@ router.get("/", async (req, res) => {
   try {
     const { rows } = await select(GET_ALL_HALLS, null);
     const response = {
-      halls: rows
+      halls: rows,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {

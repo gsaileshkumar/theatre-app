@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
   try {
     const { rows } = await select(GET_ALL_SHOWS, null);
     const response = {
-      shows: rows
+      shows: rows,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
@@ -24,11 +24,13 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     const params = {
       movie_id: parseInt(movie_id),
       hall_id: parseInt(hall_id),
-      show_time
+      show_time,
+      created_by: req.session!.user.user_id,
+      updated_by: req.session!.user.user_id,
     };
     const queryOptions = {
       text: CREATE_SHOW,
-      values: Object.values(params)
+      values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {

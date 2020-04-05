@@ -41,10 +41,11 @@ router.post("/booktickets", async (req, res) => {
       };
 
       const { rows } = await client.query(hallDetailsQueryOptions);
-      const { total_columns, total_rows } = rows[0];
+      const { hall_total_columns, hall_total_rows } = rows[0];
 
       const validEntries = seqNumArray.filter(
-        (seq_num) => seq_num > 0 && seq_num <= total_rows * total_columns
+        (seq_num) =>
+          seq_num > 0 && seq_num <= hall_total_rows * hall_total_columns
       );
 
       if (validEntries.length !== seqNumArray.length) {
@@ -69,10 +70,14 @@ router.post("/booktickets", async (req, res) => {
           .status(200)
           .send({ message: "Already booked", ...RES_ERROR });
       }
+
       seqNumArray.forEach(async (sequence_number) => {
         const params = {
+          user_id: req.session!.user.user_id,
           show_id,
           sequence_number,
+          created_by: req.session!.user.user_id,
+          updated_by: req.session!.user.user_id,
         };
         const queryOptions = {
           text: BOOK_SINGLE_TICKET,
@@ -88,9 +93,11 @@ router.post("/booktickets", async (req, res) => {
       client.release();
     }
 
-    return res
-      .status(200)
-      .send({ ...RES_SUCCESS, message: "Tickets booked", sequence_numbers });
+    return res.status(200).send({
+      ...RES_SUCCESS,
+      message: "Tickets successfully booked",
+      sequence_numbers,
+    });
   } catch (e) {
     return res
       .status(500)
