@@ -6,7 +6,7 @@ import {
   CHECK_IF_ARE_SEATS_TAKEN,
   BOOK_SINGLE_TICKET,
 } from "./queries";
-import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
+import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
 
 const router = express.Router();
 
@@ -34,6 +34,25 @@ router.post("/booktickets", async (req, res) => {
     try {
       await client.query("BEGIN");
       const seqNumArray = sequence_numbers.split(",");
+
+      const hallDetailsQueryOptions = {
+        text: GET_HALL_DETAILS_BY_SHOW_ID,
+        values: [show_id],
+      };
+
+      const { rows } = await client.query(hallDetailsQueryOptions);
+      const { total_columns, total_rows } = rows[0];
+
+      const validEntries = seqNumArray.filter(
+        (seq_num) => seq_num > 0 && seq_num <= total_rows * total_columns
+      );
+
+      if (validEntries.length !== seqNumArray.length) {
+        return res
+          .status(200)
+          .send({ message: "Invalid Entries", ...RES_ERROR });
+      }
+
       const checkSeatsParams = {
         show_id,
         sequence_numbers: seqNumArray,
@@ -48,7 +67,7 @@ router.post("/booktickets", async (req, res) => {
       if (takenCount !== 0) {
         return res
           .status(200)
-          .send({ message: "Already booked", ...RES_SUCCESS });
+          .send({ message: "Already booked", ...RES_ERROR });
       }
       seqNumArray.forEach(async (sequence_number) => {
         const params = {

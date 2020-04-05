@@ -15,6 +15,13 @@ export const CHECK_IF_ARE_SEATS_TAKEN = `
     and status = 'taken' for update
 `;
 
+export const GET_HALL_DETAILS_FROM_SHOW_ID = `
+    select h.total_columns, h.total_rows from shows as s
+    inner join halls as h
+    on s.hall_id = h.id
+    where s.id = $1
+`;
+
 export const BOOK_SINGLE_TICKET = `
     INSERT INTO show_status (show_id, sequence_number, status) VALUES ($1, $2, 'taken');
 `;

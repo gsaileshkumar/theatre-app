@@ -1,11 +1,19 @@
 export const RES_SUCCESS = {
-  status: "OK"
+  hasError: false,
+  status: "OK",
 };
 
 export const RES_FAILURE = {
-  status: "Server error"
+  hasError: true,
+  status: "Server error",
 };
 
 export const RES_UNAUTHORIZED = {
-  status: "Unauthorized"
+  hasError: true,
+  status: "Unauthorized",
+};
+
+export const RES_ERROR = {
+  hasError: true,
+  status: "App Error",
 };
