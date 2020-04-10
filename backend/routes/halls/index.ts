@@ -13,8 +13,8 @@ router.post("/", isAdminMiddleware, async (req, res) => {
       name,
       total_columns: parseInt(total_columns),
       total_rows: parseInt(total_rows),
-      created_by: req.session!.user.user_id,
-      updated_by: req.session!.user.user_id,
+      created_by: req.session!.user.id,
+      updated_by: req.session!.user.id,
     };
     const queryOptions = {
       text: CREATE_HALL,

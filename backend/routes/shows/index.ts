@@ -25,8 +25,8 @@ router.post("/", isAdminMiddleware, async (req, res) => {
       movie_id: parseInt(movie_id),
       hall_id: parseInt(hall_id),
       show_time,
-      created_by: req.session!.user.user_id,
-      updated_by: req.session!.user.user_id,
+      created_by: req.session!.user.id,
+      updated_by: req.session!.user.id,
     };
     const queryOptions = {
       text: CREATE_SHOW,

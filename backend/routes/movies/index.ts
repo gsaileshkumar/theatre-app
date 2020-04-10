@@ -57,8 +57,8 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     const params = {
       name,
       ticket_price: parseInt(ticket_price),
-      created_by: req.session!.user.user_id,
-      updated_by: req.session!.user.user_id,
+      created_by: req.session!.user.id,
+      updated_by: req.session!.user.id,
     };
     const queryOptions = {
       text: CREATE_MOVIE,

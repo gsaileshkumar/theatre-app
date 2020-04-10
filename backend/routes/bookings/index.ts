@@ -6,6 +6,7 @@ import {
   CHECK_IF_ARE_SEATS_TAKEN,
   BOOK_SINGLE_TICKET,
   GET_USER_BOOKINGS,
+  ADD_BOOKING_SUMMARY,
 } from "./queries";
 import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
 
@@ -85,14 +86,14 @@ router.post("/booktickets", async (req, res) => {
           .status(200)
           .send({ message: "Already booked", ...RES_ERROR });
       }
-
+      const user_id = req.session!.user.id;
       seqNumArray.forEach(async (sequence_number) => {
         const params = {
-          user_id: req.session!.user.user_id,
+          user_id,
           show_id,
           sequence_number,
-          created_by: req.session!.user.user_id,
-          updated_by: req.session!.user.user_id,
+          created_by: user_id,
+          updated_by: user_id,
         };
         const queryOptions = {
           text: BOOK_SINGLE_TICKET,
@@ -101,6 +102,11 @@ router.post("/booktickets", async (req, res) => {
         await client.query(queryOptions);
       });
 
+      const bookingSummaryQueryOptions = {
+        text: ADD_BOOKING_SUMMARY,
+        values: [user_id, show_id, user_id, user_id],
+      };
+      await client.query(bookingSummaryQueryOptions);
       await client.query("COMMIT");
     } catch (e) {
       await client.query("ROLLBACK");
