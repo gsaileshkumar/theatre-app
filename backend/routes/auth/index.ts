@@ -1,6 +1,10 @@
 import express from "express";
 import bcrypt from "bcrypt";
-import { GET_USER_BY_EMAIL, CREATE_USER } from "./queries";
+import {
+  GET_USER_BY_EMAIL,
+  CREATE_USER,
+  GET_USER_BY_USERNAME,
+} from "./queries";
 import { select, insert } from "../../db";
 import { RES_FAILURE, RES_SUCCESS } from "../../model/response";
 
@@ -8,8 +12,8 @@ const router = express.Router();
 
 router.post("/signup", async (req, res) => {
   try {
-    const { name, email, password, mobile } = req.body;
-    if (!name || !email || !password || !mobile) {
+    const { username, fullname, email, password, mobile } = req.body;
+    if (!username || !fullname || !email || !password || !mobile) {
       return res.status(200).send(RES_FAILURE);
     }
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
@@ -20,7 +24,8 @@ router.post("/signup", async (req, res) => {
     }
     const hashedPass = await bcrypt.hash(password, 10);
     const params = {
-      name,
+      username,
+      fullname,
       email,
       password: hashedPass,
       mobile,
@@ -42,9 +47,9 @@ router.post("/signup", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const { rows, rowCount: userExists } = await select(GET_USER_BY_EMAIL, [
-      email.toUpperCase(),
+    const { username, password } = req.body;
+    const { rows, rowCount: userExists } = await select(GET_USER_BY_USERNAME, [
+      username.toUpperCase(),
     ]);
     if (userExists) {
       const {
@@ -55,8 +60,8 @@ router.post("/login", async (req, res) => {
       const match = await bcrypt.compare(password, hashedPassword);
       if (match) {
         const user = {
-          user_id,
-          user_role,
+          id: user_id,
+          role: user_role,
         };
         req.session!.user = user;
         return res.status(200).send({ ...RES_SUCCESS, ...user });

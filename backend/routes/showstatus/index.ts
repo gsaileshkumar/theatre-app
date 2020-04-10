@@ -21,9 +21,9 @@ router.get("/:id", async (req, res) => {
       hallDetail: hallDetails[0],
       availability,
     };
-    res.status(200).send({ ...response, ...RES_SUCCESS });
+    return res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE, error: e });
   }
 });
 

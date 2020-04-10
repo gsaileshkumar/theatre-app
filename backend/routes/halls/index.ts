@@ -1,7 +1,7 @@
 import express from "express";
 import { CREATE_HALL, GET_ALL_HALLS } from "./queries";
 import { select, insert } from "../../db";
-import { RES_SUCCESS, RES_FAILURE } from "../../model/response";
+import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
 import { isAdminMiddleware } from "../../middleware/authorization";
 
 const router = express.Router();
@@ -22,10 +22,11 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {
-      res.status(200).send(RES_SUCCESS);
+      return res.status(200).send(RES_SUCCESS);
     }
+    return res.status(200).send(RES_ERROR);
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE, error: e });
   }
 });
 
@@ -35,9 +36,9 @@ router.get("/", async (req, res) => {
     const response = {
       halls: rows,
     };
-    res.status(200).send({ ...response, ...RES_SUCCESS });
+    return res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE, error: e });
   }
 });
 

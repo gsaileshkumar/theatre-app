@@ -1,7 +1,7 @@
 import express from "express";
 import { select, insert } from "../../db";
 import { GET_MOVIE_SHOWTIMES, GET_ALL_MOVIES, CREATE_MOVIE } from "./queries";
-import { RES_FAILURE, RES_SUCCESS } from "../../model/response";
+import { RES_FAILURE, RES_SUCCESS, RES_ERROR } from "../../model/response";
 import { isAdminMiddleware } from "../../middleware/authorization";
 
 const router = express.Router();
@@ -25,9 +25,9 @@ router.get("/", async (req, res) => {
     const response = {
       movies: rows,
     };
-    res.status(200).send({ ...response, ...RES_SUCCESS });
+    return res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE, error: e });
   }
 });
 
@@ -46,10 +46,11 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {
-      res.status(200).send(RES_SUCCESS);
+      return res.status(200).send(RES_SUCCESS);
     }
+    return res.status(200).send(RES_ERROR);
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE, error: e });
   }
 });
 
