@@ -5,14 +5,15 @@ import {
   GET_HALL_DETAILS_BY_SHOW_ID,
   CHECK_IF_ARE_SEATS_TAKEN,
   BOOK_SINGLE_TICKET,
+  GET_USER_BOOKINGS,
 } from "./queries";
 import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
 
 const router = express.Router();
 
-router.get("/:id", async (req, res) => {
+router.get("/show", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.query;
     const { rows: availability } = await select(GET_SHOW_AVAILABILITY, [id]);
     const { rows: hallDetails } = await select(GET_HALL_DETAILS_BY_SHOW_ID, [
       id,
@@ -23,7 +24,21 @@ router.get("/:id", async (req, res) => {
     };
     return res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
+  }
+});
+
+router.get("/", async (req, res) => {
+  try {
+    const user_id = req.session!.user.id;
+    const { rows: bookings } = await select(GET_USER_BOOKINGS, [user_id]);
+
+    const response = {
+      bookings,
+    };
+    return res.status(200).send({ ...response, ...RES_SUCCESS });
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
