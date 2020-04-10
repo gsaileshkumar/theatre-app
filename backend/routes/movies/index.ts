@@ -8,10 +8,20 @@ const router = express.Router();
 
 router.get("/showtime", async (req, res) => {
   try {
-    const { id } = req.query;
-    const { rows } = await select(GET_MOVIE_SHOWTIMES, [id]);
+    const { id, date } = req.query;
+    const startOfDayTimestamp = new Date(date).setHours(0, 0, 0, 0);
+    const startOfDay = new Date(startOfDayTimestamp);
+
+    const { rows } = await select(GET_MOVIE_SHOWTIMES, [id, startOfDay]);
+
+    const groupByHallname = rows.reduce((groupByHall, obj) => {
+      const value = obj["hall_name"];
+      groupByHall[value] = (groupByHall[value] || []).concat(obj);
+      return groupByHall;
+    }, {});
+
     const response = {
-      movies: rows,
+      movies: groupByHallname,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {

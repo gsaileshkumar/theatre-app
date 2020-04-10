@@ -2,7 +2,7 @@ import { RES_UNAUTHORIZED } from "../model/response";
 
 export const isValidUserMiddleware = (req, res, next) => {
   const { user } = req.session;
-  if (!user || !user.user_id) {
+  if (!user || !user.id) {
     return res.status(401).send(RES_UNAUTHORIZED);
   }
   return next();
@@ -10,7 +10,7 @@ export const isValidUserMiddleware = (req, res, next) => {
 
 export const isAdminMiddleware = (req, res, next) => {
   const { user } = req.session;
-  if (!user!.user_role.includes("ADMIN")) {
+  if (!user!.role.includes("ADMIN")) {
     return res.status(401).send(RES_UNAUTHORIZED);
   }
   return next();
