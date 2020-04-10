@@ -14,18 +14,28 @@ router.get("/showtime", async (req, res) => {
 
     const { rows } = await select(GET_MOVIE_SHOWTIMES, [id, startOfDay]);
 
-    const groupByHallname = rows.reduce((groupByHall, obj) => {
+    const groupByHallnameObject = rows.reduce((groupByHall, obj) => {
       const value = obj["hall_name"];
       groupByHall[value] = (groupByHall[value] || []).concat(obj);
       return groupByHall;
     }, {});
+
+    const groupByHallname = Object.entries(groupByHallnameObject).map(
+      (entry) => {
+        const obj = {
+          hall_name: entry[0],
+          availability: entry[1],
+        };
+        return obj;
+      }
+    );
 
     const response = {
       movies: groupByHallname,
     };
     res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    res.status(500).send({ ...RES_FAILURE, error: e });
+    res.status(500).send({ ...RES_FAILURE });
   }
 });
 
@@ -37,7 +47,7 @@ router.get("/", async (req, res) => {
     };
     return res.status(200).send({ ...response, ...RES_SUCCESS });
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
@@ -60,7 +70,7 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     }
     return res.status(200).send(RES_ERROR);
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE, error: e });
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
