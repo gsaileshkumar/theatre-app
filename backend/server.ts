@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import shows from "./routes/shows";
 import movies from "./routes/movies";
-import showstatus from "./routes/showstatus";
+import bookings from "./routes/bookings";
 import halls from "./routes/halls";
 import auth from "./routes/auth";
 import session from "express-session";
@@ -16,8 +16,8 @@ app.use(
     credentials: true,
     origin: [
       "https://theatreapi.saileshkumar.com",
-      "https://theatrebooking.netlify.com"
-    ]
+      "https://theatrebooking.netlify.com",
+    ],
   })
 );
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
@@ -26,7 +26,7 @@ app.use(
   session({
     proxy: true,
     secret: "ohmysecret",
-    cookie: { sameSite: "none", secure: true, httpOnly: true }
+    cookie: { sameSite: "none", secure: true, httpOnly: true },
   })
 );
 
@@ -36,12 +36,12 @@ app.use(isValidUserMiddleware);
 
 app.use("/shows", shows);
 app.use("/movies", movies);
-app.use("/showstatus", showstatus);
+app.use("/bookings", bookings);
 app.use("/halls", halls);
 
-app.use(function(req, res) {
+app.use((req, res) => {
   return res.status(404).send({
-    status: "Route unavailable"
+    status: "Route unavailable",
   });
 });
 
