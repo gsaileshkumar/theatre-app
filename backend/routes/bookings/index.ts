@@ -57,11 +57,10 @@ router.post("/booktickets", async (req, res) => {
       };
 
       const { rows } = await client.query(hallDetailsQueryOptions);
-      const { hall_total_columns, hall_total_rows } = rows[0];
+      const { total_columns, total_rows } = rows[0];
 
       const validEntries = seqNumArray.filter(
-        (seq_num) =>
-          seq_num > 0 && seq_num <= hall_total_rows * hall_total_columns
+        (seq_num) => seq_num > 0 && seq_num <= total_rows * total_columns
       );
 
       if (validEntries.length !== seqNumArray.length) {
