@@ -56,12 +56,14 @@ router.post("/login", async (req, res) => {
         user_id,
         user_password: hashedPassword,
         user_role,
+        user_full_name,
       } = rows[0] as any;
       const match = await bcrypt.compare(password, hashedPassword);
       if (match) {
         const user = {
           id: user_id,
           role: user_role,
+          full_name: user_full_name,
         };
         req.session!.user = user;
         return res.status(200).send({ ...RES_SUCCESS, ...user });
