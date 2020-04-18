@@ -1,14 +1,29 @@
 import express from "express";
 import { CREATE_HALL, GET_ALL_HALLS } from "./queries";
 import { select, insert } from "../../db";
-import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
+import {
+  RES_SUCCESS,
+  RES_FAILURE,
+  RES_ERROR,
+  RES_VALIDATION_FAILURE,
+} from "../../model/response";
 import { isAdminMiddleware } from "../../middleware/authorization";
+import { hallSchema } from "./validations";
 
 const router = express.Router();
 
 router.post("/", isAdminMiddleware, async (req, res) => {
   try {
     const { name, total_columns, total_rows } = req.body;
+    try {
+      await hallSchema.validateAsync({
+        name,
+        total_columns,
+        total_rows,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
     const params = {
       name,
       total_columns: parseInt(total_columns),

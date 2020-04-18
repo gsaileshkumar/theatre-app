@@ -6,7 +6,12 @@ import {
   GET_USER_BY_USERNAME,
 } from "./queries";
 import { select, insert } from "../../db";
-import { RES_FAILURE, RES_SUCCESS } from "../../model/response";
+import {
+  RES_FAILURE,
+  RES_SUCCESS,
+  RES_VALIDATION_FAILURE,
+} from "../../model/response";
+import { signupSchema, loginSchema } from "./validations";
 
 const router = express.Router();
 
@@ -16,6 +21,18 @@ router.post("/signup", async (req, res) => {
     if (!username || !fullname || !email || !password || !mobile) {
       return res.status(200).send(RES_FAILURE);
     }
+    try {
+      await signupSchema.validateAsync({
+        username,
+        fullname,
+        email,
+        password,
+        mobile,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
+
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
     if (userExists) {
       return res
@@ -48,6 +65,14 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
+    try {
+      await loginSchema.validateAsync({
+        username,
+        password,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
     const { rows, rowCount: userExists } = await select(GET_USER_BY_USERNAME, [
       username.toUpperCase(),
     ]);

@@ -1,8 +1,14 @@
 import express from "express";
 import { select, insert } from "../../db";
 import { GET_MOVIE_SHOWTIMES, GET_ALL_MOVIES, CREATE_MOVIE } from "./queries";
-import { RES_FAILURE, RES_SUCCESS, RES_ERROR } from "../../model/response";
+import {
+  RES_FAILURE,
+  RES_SUCCESS,
+  RES_ERROR,
+  RES_VALIDATION_FAILURE,
+} from "../../model/response";
 import { isAdminMiddleware } from "../../middleware/authorization";
+import { movieSchema } from "./validations";
 
 const router = express.Router();
 
@@ -54,6 +60,14 @@ router.get("/", async (req, res) => {
 router.post("/", isAdminMiddleware, async (req, res) => {
   try {
     const { name, ticket_price } = req.body;
+    try {
+      await movieSchema.validateAsync({
+        name,
+        ticket_price,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
     const params = {
       name,
       ticket_price: parseInt(ticket_price),

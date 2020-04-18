@@ -17,3 +17,9 @@ export const RES_ERROR = {
   hasError: true,
   status: "App Error",
 };
+
+export const RES_VALIDATION_FAILURE = {
+  hasError: true,
+  status: "Server error",
+  message: "Validation failure",
+};

@@ -1,8 +1,14 @@
 import express from "express";
 import { select, insert } from "../../db";
 import { GET_ALL_SHOWS, CREATE_SHOW } from "./queries";
-import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
+import {
+  RES_SUCCESS,
+  RES_FAILURE,
+  RES_ERROR,
+  RES_VALIDATION_FAILURE,
+} from "../../model/response";
 import { isAdminMiddleware } from "../../middleware/authorization";
+import { showSchema } from "./validations";
 
 const router = express.Router();
 
@@ -21,6 +27,15 @@ router.get("/", async (req, res) => {
 router.post("/", isAdminMiddleware, async (req, res) => {
   try {
     const { movie_id, hall_id, show_time } = req.body;
+    try {
+      await showSchema.validateAsync({
+        movie_id,
+        hall_id,
+        show_time,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
     const params = {
       movie_id: parseInt(movie_id),
       hall_id: parseInt(hall_id),

@@ -8,7 +8,13 @@ import {
   GET_USER_BOOKINGS,
   ADD_BOOKING_SUMMARY,
 } from "./queries";
-import { RES_SUCCESS, RES_FAILURE, RES_ERROR } from "../../model/response";
+import {
+  RES_SUCCESS,
+  RES_FAILURE,
+  RES_ERROR,
+  RES_VALIDATION_FAILURE,
+} from "../../model/response";
+import { bookTicketsSchema } from "./validations";
 
 const router = express.Router();
 
@@ -46,6 +52,15 @@ router.get("/", async (req, res) => {
 router.post("/booktickets", async (req, res) => {
   try {
     const { sequence_numbers, show_id } = req.body;
+    try {
+      await bookTicketsSchema.validateAsync({
+        sequence_numbers,
+        show_id,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
+
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
