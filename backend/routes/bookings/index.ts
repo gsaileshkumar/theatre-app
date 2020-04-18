@@ -7,6 +7,7 @@ import {
   BOOK_SINGLE_TICKET,
   GET_USER_BOOKINGS,
   ADD_BOOKING_SUMMARY,
+  CONFIRM_CHECK_IN,
 } from "./queries";
 import {
   RES_SUCCESS,
@@ -137,6 +138,20 @@ router.post("/booktickets", async (req, res) => {
     return res
       .status(500)
       .send({ ...RES_FAILURE, error: "Error while booking tickets" });
+  }
+});
+
+router.post("/checkin", async (req, res) => {
+  try {
+    const { booking_id } = req.body;
+    const user_id = req.session!.user.id;
+    const { rowCount } = await select(CONFIRM_CHECK_IN, [booking_id, user_id]);
+    if (rowCount === 1) {
+      return res.status(200).send(RES_SUCCESS);
+    }
+    return res.status(200).send(RES_ERROR);
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
