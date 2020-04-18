@@ -8,6 +8,7 @@ import {
   GET_USER_BOOKINGS,
   ADD_BOOKING_SUMMARY,
   CONFIRM_CHECK_IN,
+  GET_BOOKING_SUMMARY_BY_ID,
 } from "./queries";
 import {
   RES_SUCCESS,
@@ -145,7 +146,20 @@ router.post("/checkin", async (req, res) => {
   try {
     const { booking_id } = req.body;
     const user_id = req.session!.user.id;
-    const { rowCount } = await select(CONFIRM_CHECK_IN, [booking_id, user_id]);
+    const { rows } = await select(GET_BOOKING_SUMMARY_BY_ID, [
+      user_id,
+      booking_id,
+    ]);
+
+    const { checked_in } = rows[0] as any;
+
+    if (checked_in) {
+      return res
+        .status(200)
+        .send({ ...RES_ERROR, status: "Already Checked In" });
+    }
+
+    const { rowCount } = await select(CONFIRM_CHECK_IN, [user_id, booking_id]);
     if (rowCount === 1) {
       return res.status(200).send(RES_SUCCESS);
     }
