@@ -22,6 +22,6 @@ export const UPDATE_MOVIE_BY_ID = `
     SET MOVIE_NAME = $1, 
     MOVIE_TICKET_PRICE = $2, 
     MOVIE_UPDATED_BY = $3,
-    MOVIE_UPDATED_AT = $4
-    WHERE MOVIE_ID = $5
+    MOVIE_UPDATED_AT = NOW()
+    WHERE MOVIE_ID = $4
 `;

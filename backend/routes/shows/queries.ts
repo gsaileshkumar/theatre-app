@@ -11,13 +11,13 @@ export const CREATE_SHOW = `
     VALUES ($1, $2, $3, $4, $5, 'ACTIVE')
 `;
 
-export const UPDATE_SHOW = `
+export const UPDATE_SHOW_BY_ID = `
     UPDATE SHOWS 
     SHOW_MOVIE_ID = $1, 
     SHOW_HALL_ID = $2, 
     SHOW_TIME = $3, 
     SHOW_UPDATED_BY= $4,
-    SHOW_UPDATED_AT = $5,
-    SHOW_STATUS = $6
-    WHERE SHOW_ID = $7
+    SHOW_UPDATED_AT = NOW(),
+    SHOW_STATUS = $5
+    WHERE SHOW_ID = $6
 `;

@@ -1,5 +1,5 @@
 import express from "express";
-import { CREATE_HALL, GET_ALL_HALLS } from "./queries";
+import { CREATE_HALL, GET_ALL_HALLS, UPDATE_HALL_BY_ID } from "./queries";
 import { select, insert } from "../../db";
 import {
   RES_SUCCESS,
@@ -33,6 +33,40 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     };
     const queryOptions = {
       text: CREATE_HALL,
+      values: Object.values(params),
+    };
+    const { rowCount } = await insert(queryOptions, null);
+    if (rowCount === 1) {
+      return res.status(200).send(RES_SUCCESS);
+    }
+    return res.status(200).send(RES_ERROR);
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE, error: e });
+  }
+});
+
+router.put("/", isAdminMiddleware, async (req, res) => {
+  try {
+    const { name, total_columns, total_rows, id } = req.body;
+    try {
+      await hallSchema.validateAsync({
+        name,
+        total_columns,
+        total_rows,
+        id,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
+    const params = {
+      name,
+      total_columns: parseInt(total_columns),
+      total_rows: parseInt(total_rows),
+      updated_by: req.session!.user.id,
+      hall_id: id,
+    };
+    const queryOptions = {
+      text: UPDATE_HALL_BY_ID,
       values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);

@@ -1,6 +1,11 @@
 import express from "express";
 import { select, insert } from "../../db";
-import { GET_MOVIE_SHOWTIMES, GET_ALL_MOVIES, CREATE_MOVIE } from "./queries";
+import {
+  GET_MOVIE_SHOWTIMES,
+  GET_ALL_MOVIES,
+  CREATE_MOVIE,
+  UPDATE_MOVIE_BY_ID,
+} from "./queries";
 import {
   RES_FAILURE,
   RES_SUCCESS,
@@ -76,6 +81,38 @@ router.post("/", isAdminMiddleware, async (req, res) => {
     };
     const queryOptions = {
       text: CREATE_MOVIE,
+      values: Object.values(params),
+    };
+    const { rowCount } = await insert(queryOptions, null);
+    if (rowCount === 1) {
+      return res.status(200).send(RES_SUCCESS);
+    }
+    return res.status(200).send(RES_ERROR);
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE });
+  }
+});
+
+router.put("/", isAdminMiddleware, async (req, res) => {
+  try {
+    const { name, ticket_price, id } = req.body;
+    try {
+      await movieSchema.validateAsync({
+        name,
+        ticket_price,
+        id,
+      });
+    } catch (err) {
+      return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
+    const params = {
+      name,
+      ticket_price: parseInt(ticket_price),
+      updated_by: req.session!.user.id,
+      movie_id: id,
+    };
+    const queryOptions = {
+      text: UPDATE_MOVIE_BY_ID,
       values: Object.values(params),
     };
     const { rowCount } = await insert(queryOptions, null);
