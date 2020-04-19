@@ -4,14 +4,17 @@ import {
   GET_USER_BY_EMAIL,
   CREATE_USER,
   GET_USER_BY_USERNAME,
+  GET_USER_BY_USER_ID,
 } from "./queries";
 import { select, insert } from "../../db";
 import {
   RES_FAILURE,
   RES_SUCCESS,
   RES_VALIDATION_FAILURE,
+  RES_UNAUTHORIZED,
 } from "../../model/response";
 import { signupSchema, loginSchema } from "./validations";
+import { isValidUserMiddleware } from "../../middleware/authorization";
 
 const router = express.Router();
 
@@ -91,9 +94,34 @@ router.post("/login", async (req, res) => {
           full_name: user_full_name,
         };
         req.session!.user = user;
-        return res.status(200).send({ ...RES_SUCCESS, ...user });
+        return res.status(200).send({ ...RES_SUCCESS, message: "Logged in" });
       }
       return res.status(200).send(RES_FAILURE);
+    }
+    return res.status(200).send(RES_FAILURE);
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE });
+  }
+});
+
+router.get("/ping", isValidUserMiddleware, async (req, res) => {
+  try {
+    const user_id = req.session!.user.id;
+    if (!user_id) {
+      return res.status(401).send(RES_UNAUTHORIZED);
+    }
+    const { rows, rowCount: userExists } = await select(GET_USER_BY_USER_ID, [
+      user_id,
+    ]);
+
+    if (userExists) {
+      const { user_id, user_role, user_full_name } = rows[0] as any;
+      const user = {
+        id: user_id,
+        role: user_role,
+        full_name: user_full_name,
+      };
+      return res.status(200).send({ ...RES_SUCCESS, ...user });
     }
     return res.status(200).send(RES_FAILURE);
   } catch (e) {
