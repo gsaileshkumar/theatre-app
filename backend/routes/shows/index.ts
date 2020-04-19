@@ -59,14 +59,20 @@ router.post("/", isAdminMiddleware, async (req, res) => {
 
 router.put("/", isAdminMiddleware, async (req, res) => {
   try {
-    const { movie_id, hall_id, show_time, show_id, show_status } = req.body;
+    const {
+      movie_id,
+      hall_id,
+      show_time,
+      show_id,
+      show_current_status,
+    } = req.body;
     try {
       await showSchema.validateAsync({
         movie_id,
         hall_id,
         show_time,
         show_id,
-        show_status,
+        show_current_status,
       });
     } catch (err) {
       return res.status(200).send(RES_VALIDATION_FAILURE);
@@ -76,7 +82,7 @@ router.put("/", isAdminMiddleware, async (req, res) => {
       hall_id: parseInt(hall_id),
       show_time,
       updated_by: req.session!.user.id,
-      show_status,
+      show_current_status,
       show_id,
     };
     const queryOptions = {
