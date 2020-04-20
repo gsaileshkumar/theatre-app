@@ -94,7 +94,9 @@ router.post("/login", async (req, res) => {
           full_name: user_full_name,
         };
         req.session!.user = user;
-        return res.status(200).send({ ...RES_SUCCESS, message: "Logged in" });
+        return res
+          .status(200)
+          .send({ ...RES_SUCCESS, message: "Logged in", user });
       }
       return res.status(200).send(RES_FAILURE);
     }

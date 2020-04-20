@@ -144,12 +144,10 @@ router.post("/booktickets", async (req, res) => {
 
 router.post("/checkin", async (req, res) => {
   try {
-    const { booking_id } = req.body;
+    const { qr_data } = req.body;
+    const qr_split_data = qr_data.split(":");
     const user_id = req.session!.user.id;
-    const { rows } = await select(GET_BOOKING_SUMMARY_BY_ID, [
-      user_id,
-      booking_id,
-    ]);
+    const { rows } = await select(GET_BOOKING_SUMMARY_BY_ID, qr_split_data);
 
     const { checked_in } = rows[0] as any;
 
@@ -159,7 +157,10 @@ router.post("/checkin", async (req, res) => {
         .send({ ...RES_ERROR, status: "Already Checked In" });
     }
 
-    const { rowCount } = await select(CONFIRM_CHECK_IN, [user_id, booking_id]);
+    const { rowCount } = await select(CONFIRM_CHECK_IN, [
+      user_id,
+      qr_split_data[1],
+    ]);
     if (rowCount === 1) {
       return res.status(200).send(RES_SUCCESS);
     }
