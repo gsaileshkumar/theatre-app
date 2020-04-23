@@ -13,6 +13,7 @@ import {
   RES_SUCCESS,
   RES_VALIDATION_FAILURE,
   RES_UNAUTHORIZED,
+  RES_ERROR,
 } from '../../model/response';
 import { signupSchema, loginSchema } from './validations';
 import { isValidUserMiddleware } from '../../middleware/authorization';
@@ -46,7 +47,7 @@ router.post('/signup', async (req, res) => {
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
     if (userExists) {
       return setAndReturnCaptcha(req, res, {
-        ...RES_SUCCESS,
+        ...RES_ERROR,
         status: 'User already exists',
       });
     }
@@ -68,7 +69,7 @@ router.post('/signup', async (req, res) => {
       req.session!.captcha = null;
       return res.status(200).send(RES_SUCCESS);
     }
-    return setAndReturnCaptcha(req, res, RES_FAILURE);
+    return setAndReturnCaptcha(req, res, RES_ERROR);
   } catch (e) {
     return setAndReturnCaptcha(req, res, RES_FAILURE);
   }
@@ -113,9 +114,9 @@ router.post('/login', async (req, res) => {
           .status(200)
           .send({ ...RES_SUCCESS, message: 'Logged in', user });
       }
-      return res.status(200).send(RES_FAILURE);
+      return res.status(200).send(RES_ERROR);
     }
-    return res.status(200).send(RES_FAILURE);
+    return res.status(200).send(RES_ERROR);
   } catch (e) {
     return res.status(500).send({ ...RES_FAILURE });
   }
@@ -140,7 +141,7 @@ router.get('/ping', isValidUserMiddleware, async (req, res) => {
       };
       return res.status(200).send({ ...RES_SUCCESS, ...user });
     }
-    return res.status(200).send(RES_FAILURE);
+    return res.status(200).send(RES_ERROR);
   } catch (e) {
     return res.status(500).send({ ...RES_FAILURE });
   }
