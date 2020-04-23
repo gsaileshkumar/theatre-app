@@ -1,25 +1,25 @@
-import express from "express";
-import bcrypt from "bcrypt";
-import svgCaptcha from "svg-captcha";
+import express from 'express';
+import bcrypt from 'bcrypt';
+import svgCaptcha from 'svg-captcha';
 import {
   GET_USER_BY_EMAIL,
   CREATE_USER,
   GET_USER_BY_USERNAME,
   GET_USER_BY_USER_ID,
-} from "./queries";
-import { select, insert } from "../../db";
+} from './queries';
+import { select, insert } from '../../db';
 import {
   RES_FAILURE,
   RES_SUCCESS,
   RES_VALIDATION_FAILURE,
   RES_UNAUTHORIZED,
-} from "../../model/response";
-import { signupSchema, loginSchema } from "./validations";
-import { isValidUserMiddleware } from "../../middleware/authorization";
+} from '../../model/response';
+import { signupSchema, loginSchema } from './validations';
+import { isValidUserMiddleware } from '../../middleware/authorization';
 
 const router = express.Router();
 
-router.post("/signup", async (req, res) => {
+router.post('/signup', async (req, res) => {
   try {
     const { username, fullname, email, password, mobile, captcha } = req.body;
     if (!username || !fullname || !email || !password || !mobile) {
@@ -40,18 +40,15 @@ router.post("/signup", async (req, res) => {
 
     const captchaInSession = req.session!.captcha;
     if (captcha !== captchaInSession) {
-      const captcha = svgCaptcha.create();
-      req.session!.captcha = captcha.text;
-      return res
-        .status(401)
-        .send({ ...RES_UNAUTHORIZED, captcha: captcha.data });
+      return setAndReturnCaptcha(req, res, RES_VALIDATION_FAILURE);
     }
 
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
     if (userExists) {
-      return res
-        .status(200)
-        .send({ ...RES_SUCCESS, status: "User already exists" });
+      return setAndReturnCaptcha(req, res, {
+        ...RES_SUCCESS,
+        status: 'User already exists',
+      });
     }
     const hashedPass = await bcrypt.hash(password, 10);
     const params = {
@@ -60,7 +57,7 @@ router.post("/signup", async (req, res) => {
       email,
       password: hashedPass,
       mobile,
-      role: "USER",
+      role: 'USER',
     };
     const queryOptions = {
       text: CREATE_USER,
@@ -70,13 +67,19 @@ router.post("/signup", async (req, res) => {
     if (rowCount === 1) {
       return res.status(200).send(RES_SUCCESS);
     }
-    return res.status(200).send(RES_FAILURE);
+    return setAndReturnCaptcha(req, res, RES_FAILURE);
   } catch (e) {
-    return res.status(500).send({ ...RES_FAILURE });
+    return setAndReturnCaptcha(req, res, RES_FAILURE);
   }
 });
 
-router.post("/login", async (req, res) => {
+const setAndReturnCaptcha = (req, res, jsonResp) => {
+  const captcha = svgCaptcha.create();
+  req.session!.captcha = captcha.text;
+  return res.status(200).send({ ...jsonResp, captcha: captcha.data });
+};
+
+router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     try {
@@ -107,7 +110,7 @@ router.post("/login", async (req, res) => {
         req.session!.user = user;
         return res
           .status(200)
-          .send({ ...RES_SUCCESS, message: "Logged in", user });
+          .send({ ...RES_SUCCESS, message: 'Logged in', user });
       }
       return res.status(200).send(RES_FAILURE);
     }
@@ -117,7 +120,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.get("/ping", isValidUserMiddleware, async (req, res) => {
+router.get('/ping', isValidUserMiddleware, async (req, res) => {
   try {
     const user_id = req.session!.user.id;
     if (!user_id) {
@@ -142,17 +145,17 @@ router.get("/ping", isValidUserMiddleware, async (req, res) => {
   }
 });
 
-router.post("/logout", async (req, res) => {
+router.post('/logout', async (req, res) => {
   try {
     req.session!.user = null;
-    res.clearCookie("connect.sid");
-    return res.status(200).send({ ...RES_SUCCESS, message: "Logged out" });
+    res.clearCookie('connect.sid');
+    return res.status(200).send({ ...RES_SUCCESS, message: 'Logged out' });
   } catch (e) {
     return res.status(500).send({ ...RES_FAILURE });
   }
 });
 
-router.get("/captcha", async (req, res) => {
+router.get('/captcha', async (req, res) => {
   try {
     const captcha = svgCaptcha.create();
     req.session!.captcha = captcha.text;
