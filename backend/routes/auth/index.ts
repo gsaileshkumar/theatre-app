@@ -17,6 +17,7 @@ import {
 } from '../../model/response';
 import { signupSchema, loginSchema } from './validations';
 import { isValidUserMiddleware } from '../../middleware/authorization';
+import { COOKIE_EXPIRY_TIME_IN_MS } from '../../config';
 
 const router = express.Router();
 
@@ -112,7 +113,12 @@ router.post('/login', async (req, res) => {
         req.session!.user = user;
         return res
           .status(200)
-          .send({ ...RES_SUCCESS, message: 'Logged in', user });
+          .send({
+            ...RES_SUCCESS,
+            message: 'Logged in',
+            user,
+            cookieExpiryTime: COOKIE_EXPIRY_TIME_IN_MS,
+          });
       }
       return res.status(200).send(RES_ERROR);
     }
@@ -126,7 +132,7 @@ router.get('/ping', isValidUserMiddleware, async (req, res) => {
   try {
     const user_id = req.session!.user.id;
     if (!user_id) {
-      return res.status(401).send(RES_UNAUTHORIZED);
+      return res.status(200).send(RES_UNAUTHORIZED);
     }
     const { rows, rowCount: userExists } = await select(GET_USER_BY_USER_ID, [
       user_id,
@@ -139,7 +145,11 @@ router.get('/ping', isValidUserMiddleware, async (req, res) => {
         role: user_role,
         full_name: user_full_name,
       };
-      return res.status(200).send({ ...RES_SUCCESS, ...user });
+      return res.status(200).send({
+        ...RES_SUCCESS,
+        user,
+        cookieExpiryTime: COOKIE_EXPIRY_TIME_IN_MS,
+      });
     }
     return res.status(200).send(RES_ERROR);
   } catch (e) {
