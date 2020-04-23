@@ -16,6 +16,7 @@ export const signupSchema = Joi.object({
   mobile: Joi.string()
     .pattern(/^[789]\d{9}$/)
     .required(),
+  captcha: Joi.string().required(),
 });
 
 export const loginSchema = Joi.object({

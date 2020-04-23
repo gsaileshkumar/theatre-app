@@ -1,5 +1,6 @@
 import express from "express";
 import bcrypt from "bcrypt";
+import svgCaptcha from "svg-captcha";
 import {
   GET_USER_BY_EMAIL,
   CREATE_USER,
@@ -20,7 +21,7 @@ const router = express.Router();
 
 router.post("/signup", async (req, res) => {
   try {
-    const { username, fullname, email, password, mobile } = req.body;
+    const { username, fullname, email, password, mobile, captcha } = req.body;
     if (!username || !fullname || !email || !password || !mobile) {
       return res.status(200).send(RES_FAILURE);
     }
@@ -31,9 +32,19 @@ router.post("/signup", async (req, res) => {
         email,
         password,
         mobile,
+        captcha,
       });
     } catch (err) {
       return res.status(200).send(RES_VALIDATION_FAILURE);
+    }
+
+    const captchaInSession = req.session!.captcha;
+    if (captcha !== captchaInSession) {
+      const captcha = svgCaptcha.create();
+      req.session!.captcha = captcha.text;
+      return res
+        .status(401)
+        .send({ ...RES_UNAUTHORIZED, captcha: captcha.data });
     }
 
     const { rowCount: userExists } = await select(GET_USER_BY_EMAIL, [email]);
@@ -136,6 +147,16 @@ router.post("/logout", async (req, res) => {
     req.session!.user = null;
     res.clearCookie("connect.sid");
     return res.status(200).send({ ...RES_SUCCESS, message: "Logged out" });
+  } catch (e) {
+    return res.status(500).send({ ...RES_FAILURE });
+  }
+});
+
+router.get("/captcha", async (req, res) => {
+  try {
+    const captcha = svgCaptcha.create();
+    req.session!.captcha = captcha.text;
+    return res.status(200).send({ ...RES_SUCCESS, captcha: captcha.data });
   } catch (e) {
     return res.status(500).send({ ...RES_FAILURE });
   }
