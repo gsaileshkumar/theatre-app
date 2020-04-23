@@ -65,6 +65,7 @@ router.post('/signup', async (req, res) => {
     };
     const { rowCount } = await insert(queryOptions, null);
     if (rowCount === 1) {
+      req.session!.captcha = null;
       return res.status(200).send(RES_SUCCESS);
     }
     return setAndReturnCaptcha(req, res, RES_FAILURE);
