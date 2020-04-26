@@ -17,7 +17,7 @@ app.use(
     credentials: true,
     origin: [
       'https://theatreapi.saileshkumar.com',
-      'https://theatrebooking.netlify.app',
+      'https://binge-watch.netlify.app',
     ],
   })
 );
