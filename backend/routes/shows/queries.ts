@@ -13,7 +13,7 @@ export const CREATE_SHOW = `
 
 export const UPDATE_SHOW_BY_ID = `
     UPDATE SHOWS 
-    SHOW_MOVIE_ID = $1, 
+    SET SHOW_MOVIE_ID = $1, 
     SHOW_HALL_ID = $2, 
     SHOW_TIME = $3, 
     SHOW_UPDATED_BY= $4,
