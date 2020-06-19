@@ -2,6 +2,7 @@ version: '3.7'
 
 services:
   db:
+    container_name: theatre-db
     image: postgres:latest
     restart: always
     ports:
@@ -15,6 +16,7 @@ services:
       - 'db-data:/var/lib/postgresql/data/'
 
   server:
+    container_name: theatre-server
     depends_on:
       - db
     build: ./backend
