@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import svgCaptcha from 'svg-captcha';
 import {
   GET_USER_BY_EMAIL,
@@ -111,14 +111,12 @@ router.post('/login', async (req, res) => {
           full_name: user_full_name,
         };
         req.session!.user = user;
-        return res
-          .status(200)
-          .send({
-            ...RES_SUCCESS,
-            message: 'Logged in',
-            user,
-            cookieExpiryTime: COOKIE_EXPIRY_TIME_IN_MS,
-          });
+        return res.status(200).send({
+          ...RES_SUCCESS,
+          message: 'Logged in',
+          user,
+          cookieExpiryTime: COOKIE_EXPIRY_TIME_IN_MS,
+        });
       }
       return res.status(200).send(RES_ERROR);
     }
