@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
+    "helmet": "^4.6.0",
     "pg": "^7.18.2",
     "svg-captcha": "^1.4.0",
     "typescript": "^3.8.3"

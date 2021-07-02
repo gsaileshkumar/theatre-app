@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet'
 import cors from 'cors';
 import shows from './routes/shows';
 import movies from './routes/movies';
@@ -12,15 +13,8 @@ import { COOKIE_EXPIRY_TIME_IN_MS } from './config';
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(
-  cors({
-    credentials: true,
-    origin: [
-      'https://theatreapi.saileshkumar.com',
-      'https://binge-watch.netlify.app',
-    ],
-  })
-);
+app.use(helmet());
+app.use(cors());
 app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 app.use(
