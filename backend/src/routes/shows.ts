@@ -29,43 +29,31 @@ export default async function showRoutes(app: FastifyInstance) {
     }
   });
 
-  app.post('/', {
-    schema: { body: showBodySchema },
-    preHandler: (req, reply, done) => {
-      if ((req as any).session?.user?.role !== 'ADMIN') { reply.code(401).send(RES_FAILURE); return; }
-      done();
-    },
-    handler: async (request, reply) => {
-      try {
-        const { movie_id, hall_id, show_time } = request.body as z.infer<typeof showBodySchema>;
-        const userId = (request as any).session.user!.id;
-        await app.db.insert(shows).values({ movieId: movie_id, hallId: hall_id, showTime: new Date(show_time), createdBy: userId, updatedBy: userId, currentStatus: 'ACTIVE' });
-        return reply.code(201).send(RES_SUCCESS);
-      } catch {
-        return reply.code(500).send(RES_ERROR);
-      }
-    },
+  app.post('/', async (request, reply) => {
+    try {
+      if ((request as any).session?.user?.role !== 'ADMIN') return reply.code(401).send(RES_FAILURE);
+      const { movie_id, hall_id, show_time } = showBodySchema.parse(request.body);
+      const userId = (request as any).session.user!.id;
+      await app.db.insert(shows).values({ movieId: movie_id, hallId: hall_id, showTime: new Date(show_time), createdBy: userId, updatedBy: userId, currentStatus: 'ACTIVE' });
+      return reply.code(201).send(RES_SUCCESS);
+    } catch {
+      return reply.code(500).send(RES_ERROR);
+    }
   });
 
-  app.put('/', {
-    schema: { body: showBodySchema.extend({ show_id: z.number(), show_current_status: z.enum(['ACTIVE', 'INACTIVE']) }) },
-    preHandler: (req, reply, done) => {
-      if ((req as any).session?.user?.role !== 'ADMIN') { reply.code(401).send(RES_FAILURE); return; }
-      done();
-    },
-    handler: async (request, reply) => {
-      try {
-        const { movie_id, hall_id, show_time, show_id, show_current_status } = request.body as z.infer<typeof showBodySchema> & { show_id: number; show_current_status: 'ACTIVE' | 'INACTIVE' };
-        const userId = (request as any).session.user!.id;
-        const result = await app.db
-          .update(shows)
-          .set({ movieId: movie_id, hallId: hall_id, showTime: new Date(show_time), updatedBy: userId, updatedAt: new Date(), currentStatus: show_current_status })
-          .where(eq(shows.showId, show_id));
-        if ((result as any).rowCount === 0) return reply.code(404).send(RES_ERROR);
-        return reply.code(200).send(RES_SUCCESS);
-      } catch {
-        return reply.code(500).send(RES_ERROR);
-      }
-    },
+  app.put('/', async (request, reply) => {
+    try {
+      if ((request as any).session?.user?.role !== 'ADMIN') return reply.code(401).send(RES_FAILURE);
+      const { movie_id, hall_id, show_time, show_id, show_current_status } = showBodySchema.extend({ show_id: z.number(), show_current_status: z.enum(['ACTIVE', 'INACTIVE']) }).parse(request.body);
+      const userId = (request as any).session.user!.id;
+      const result = await app.db
+        .update(shows)
+        .set({ movieId: movie_id, hallId: hall_id, showTime: new Date(show_time), updatedBy: userId, updatedAt: new Date(), currentStatus: show_current_status })
+        .where(eq(shows.showId, show_id));
+      if ((result as any).rowCount === 0) return reply.code(404).send(RES_ERROR);
+      return reply.code(200).send(RES_SUCCESS);
+    } catch {
+      return reply.code(500).send(RES_ERROR);
+    }
   });
 }

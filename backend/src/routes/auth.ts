@@ -23,60 +23,54 @@ const loginSchema = z.object({
 });
 
 export default async function authRoutes(app: FastifyInstance) {
-  app.post('/signup', {
-    schema: { body: signupSchema },
-    handler: async (request, reply) => {
-      try {
-        const { username, fullname, email, password, mobile, captcha } = request.body as z.infer<typeof signupSchema>;
-        const session = (request as any).session as any;
-        if (!session?.captcha || captcha !== session.captcha) {
-          const newCap = Math.floor(100000 + Math.random() * 900000).toString();
-          if (session) session.captcha = newCap;
-          return reply.code(400).send({ ...RES_FAILURE, message: 'Invalid captcha', captcha: newCap });
-        }
-
-        const existingByEmail = await app.db.select().from(users).where(eq(users.email, email));
-        if (existingByEmail.length > 0) {
-          const newCap = Math.floor(100000 + Math.random() * 900000).toString();
-          if (session) session.captcha = newCap;
-          return reply.code(409).send({ ...RES_ERROR, status: 'User already exists', captcha: newCap });
-        }
-
-        const hashed = await bcrypt.hash(password, 10);
-        await app.db.insert(users).values({
-          userName: username.toUpperCase(),
-          fullName: fullname,
-          email,
-          password: hashed,
-          mobile,
-          role: 'USER',
-        });
-        if (session) session.captcha = null;
-        return reply.code(201).send(RES_SUCCESS);
-      } catch {
-        return reply.code(500).send(RES_FAILURE);
+  app.post('/signup', async (request, reply) => {
+    try {
+      const { username, fullname, email, password, mobile, captcha } = signupSchema.parse(request.body);
+      const session = (request as any).session as any;
+      if (!session?.captcha || captcha !== session.captcha) {
+        const newCap = Math.floor(100000 + Math.random() * 900000).toString();
+        if (session) session.captcha = newCap;
+        return reply.code(400).send({ ...RES_FAILURE, message: 'Invalid captcha', captcha: newCap });
       }
-    },
+
+      const existingByEmail = await app.db.select().from(users).where(eq(users.email, email));
+      if (existingByEmail.length > 0) {
+        const newCap = Math.floor(100000 + Math.random() * 900000).toString();
+        if (session) session.captcha = newCap;
+        return reply.code(409).send({ ...RES_ERROR, status: 'User already exists', captcha: newCap });
+      }
+
+      const hashed = await bcrypt.hash(password, 10);
+      await app.db.insert(users).values({
+        userName: username.toUpperCase(),
+        fullName: fullname,
+        email,
+        password: hashed,
+        mobile,
+        role: 'USER',
+      });
+      if (session) session.captcha = null;
+      return reply.code(201).send(RES_SUCCESS);
+    } catch {
+      return reply.code(500).send(RES_FAILURE);
+    }
   });
 
-  app.post('/login', {
-    schema: { body: loginSchema },
-    handler: async (request, reply) => {
-      try {
-        const { username, password } = request.body as z.infer<typeof loginSchema>;
-        const rows = await app.db.select().from(users).where(eq(users.userName, username.toUpperCase()))
-          .limit(1);
-        if (rows.length === 0) return reply.code(401).send(RES_UNAUTHORIZED);
-        const userRow = rows[0];
-        const match = await bcrypt.compare(password, userRow.password);
-        if (!match) return reply.code(401).send(RES_UNAUTHORIZED);
-        const user = { id: userRow.userId!, role: userRow.role as 'ADMIN' | 'USER', full_name: userRow.fullName };
-        (request as any).session.user = user;
-        return reply.code(200).send({ ...RES_SUCCESS, message: 'Logged in', user, cookieExpiryTime: 60 * 60 * 1000 });
-      } catch {
-        return reply.code(500).send(RES_FAILURE);
-      }
-    },
+  app.post('/login', async (request, reply) => {
+    try {
+      const { username, password } = loginSchema.parse(request.body);
+      const rows = await app.db.select().from(users).where(eq(users.userName, username.toUpperCase()))
+        .limit(1);
+      if (rows.length === 0) return reply.code(401).send(RES_UNAUTHORIZED);
+      const userRow = rows[0];
+      const match = await bcrypt.compare(password, userRow.password);
+      if (!match) return reply.code(401).send(RES_UNAUTHORIZED);
+      const user = { id: userRow.userId!, role: userRow.role as 'ADMIN' | 'USER', full_name: userRow.fullName };
+      (request as any).session.user = user;
+      return reply.code(200).send({ ...RES_SUCCESS, message: 'Logged in', user, cookieExpiryTime: 60 * 60 * 1000 });
+    } catch {
+      return reply.code(500).send(RES_FAILURE);
+    }
   });
 
   app.get('/ping', async (request, reply) => {

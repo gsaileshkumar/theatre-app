@@ -39,6 +39,11 @@ export async function build() {
     reply.code(404).send({ hasError: true, status: 'Route unavailable' });
   });
 
+  app.setErrorHandler((error, _req, reply) => {
+    app.log.error(error);
+    reply.code(500).send({ hasError: true, status: 'Server error', message: error.message });
+  });
+
   return app;
 }
 
