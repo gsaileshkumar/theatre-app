@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { bookingSummary, bookings, halls, shows } from '../db/schema';
-import { and, eq } from 'drizzle-orm';
+import { bookingSummary, bookings, halls, shows, movies } from '../db/schema';
+import { and, eq, sql } from 'drizzle-orm';
 import { RES_ERROR, RES_FAILURE, RES_SUCCESS, RES_UNAUTHORIZED } from './_shared';
 
 const bookTicketsSchema = z.object({
@@ -65,84 +65,88 @@ export default async function bookingRoutes(app: FastifyInstance) {
   app.post('/booktickets', {
     schema: { body: bookTicketsSchema },
     handler: async (request, reply) => {
-      const client = await app.pgPool.connect();
       try {
         const { sequence_numbers, show_id } = request.body as z.infer<typeof bookTicketsSchema>;
-        const seqNumArray = sequence_numbers.split(',').map((s) => Number(s.trim())).filter((n) => Number.isInteger(n));
+        const seqNumArray = sequence_numbers
+          .split(',')
+          .map((s) => Number(s.trim()))
+          .filter((n) => Number.isInteger(n));
         if (seqNumArray.length === 0) return reply.code(400).send(RES_FAILURE);
 
-        await client.query('BEGIN');
-
-        // validate seat range
-        const hallRes = await client.query(
-          `SELECT HALL_TOTAL_COLUMNS AS total_columns, HALL_TOTAL_ROWS AS total_rows FROM SHOWS INNER JOIN HALLS ON SHOW_HALL_ID = HALL_ID WHERE SHOW_ID = $1`,
-          [show_id]
-        );
-        const { total_columns, total_rows } = hallRes.rows[0] as any;
-        const maxSeat = total_columns * total_rows;
-        if (seqNumArray.some((n) => n <= 0 || n > maxSeat)) {
-          await client.query('ROLLBACK');
-          return reply.code(400).send({ ...RES_ERROR, message: 'Invalid Entries' });
-        }
-
-        // lock and check taken seats
-        const takenRes = await client.query(
-          `SELECT 1 FROM BOOKINGS WHERE BOOKING_SHOW_ID = $1 AND BOOKING_SEQUENCE_NUMBER = ANY($2) AND BOOKING_STATUS = 'TAKEN' FOR UPDATE`,
-          [show_id, seqNumArray]
-        );
-        if (takenRes.rowCount !== 0) {
-          await client.query('ROLLBACK');
-          return reply.code(409).send({ ...RES_ERROR, message: 'Already booked' });
-        }
-
         const userId = (request as any).session?.user?.id as number | undefined;
-        if (!userId) {
-          await client.query('ROLLBACK');
-          return reply.code(401).send(RES_UNAUTHORIZED);
-        }
+        if (!userId) return reply.code(401).send(RES_UNAUTHORIZED);
 
-        // batch insert bookings
-        const values = seqNumArray
-          .map((_, i) => `($1, $2, $${i + 3}, 'TAKEN', $1, $1)`) // userId, showId, seq, status, createdBy, updatedBy
-          .join(',');
-        await client.query(
-          `INSERT INTO BOOKINGS (BOOKING_USER_ID, BOOKING_SHOW_ID, BOOKING_SEQUENCE_NUMBER, BOOKING_STATUS, BOOKING_CREATED_BY, BOOKING_UPDATED_BY) VALUES ${values}`,
-          [userId, show_id, ...seqNumArray]
-        );
+        await app.db.transaction(async (tx) => {
+          // validate seat range
+          const [hallRow] = await tx
+            .select({ total_columns: halls.totalColumns, total_rows: halls.totalRows })
+            .from(shows)
+            .innerJoin(halls, eq(shows.hallId, halls.hallId))
+            .where(eq(shows.showId, show_id));
+          const maxSeat = hallRow.total_columns! * hallRow.total_rows!;
+          if (seqNumArray.some((n) => n <= 0 || n > maxSeat)) {
+            throw Object.assign(new Error('Invalid Entries'), { statusCode: 400 });
+          }
 
-        // create booking summary from latest state
-        await client.query(
-          `INSERT INTO BOOKING_SUMMARY (
-            BOOKING_SUMMARY_MOVIE_ID,
-            BOOKING_SUMMARY_MOVIE_NAME,
-            BOOKING_SUMMARY_SHOW_TIME,
-            BOOKING_SUMMARY_USER_ID,
-            BOOKING_SUMMARY_SHOW_ID,
-            BOOKING_SUMMARY_BOOKED_SEATS,
-            BOOKING_SUMMARY_CONFIRMED,
-            BOOKING_SUMMARY_CHECKED_IN,
-            BOOKING_SUMMARY_CREATED_BY,
-            BOOKING_SUMMARY_UPDATED_BY
-          )
-          SELECT m.MOVIE_ID, m.MOVIE_NAME, s.SHOW_TIME, $1, $2, (
-            SELECT STRING_AGG(b.BOOKING_SEQUENCE_NUMBER::VARCHAR, ', ')
-            FROM BOOKINGS b
-            WHERE b.BOOKING_USER_ID = $1 AND b.BOOKING_SHOW_ID = $2
-          ), true, false, $1, $1
-          FROM SHOWS s
-          INNER JOIN MOVIES m ON s.SHOW_MOVIE_ID = m.MOVIE_ID
-          WHERE s.SHOW_ID = $2
-          RETURNING BOOKING_SUMMARY_ID`,
-          [userId, show_id]
-        );
+          // check taken seats with explicit lock
+          const arr = sql.raw('{' + seqNumArray.join(',') + '}');
+          const taken = await tx.execute(sql`
+            SELECT 1 FROM BOOKINGS WHERE BOOKING_SHOW_ID = ${show_id}
+            AND BOOKING_SEQUENCE_NUMBER = ANY(${arr}::int[])
+            AND BOOKING_STATUS = 'TAKEN' FOR UPDATE
+          `);
+          if ((taken as any).rowCount && (taken as any).rowCount !== 0) {
+            throw Object.assign(new Error('Already booked'), { statusCode: 409 });
+          }
 
-        await client.query('COMMIT');
+          // insert bookings
+          for (const seq of seqNumArray) {
+            await tx.insert(bookings).values({
+              userId: userId,
+              showId: show_id,
+              sequenceNumber: seq,
+              status: 'TAKEN',
+              createdBy: userId,
+              updatedBy: userId,
+            });
+          }
+
+          // build summary values
+          const [showMovie] = await tx
+            .select({
+              mId: movies.movieId,
+              mName: movies.name,
+              sTime: shows.showTime,
+            })
+            .from(shows)
+            .innerJoin(movies, eq(shows.movieId, movies.movieId))
+            .where(eq(shows.showId, show_id));
+
+          const seatsAgg = await tx
+            .select({ s: sql<string>`STRING_AGG(${bookings.sequenceNumber}::VARCHAR, ', ')` })
+            .from(bookings)
+            .where(and(eq(bookings.userId, userId), eq(bookings.showId, show_id)));
+
+          await tx.insert(bookingSummary).values({
+            movieId: showMovie.mId!,
+            movieName: showMovie.mName!,
+            showTime: showMovie.sTime!,
+            userId,
+            showId: show_id,
+            bookedSeats: seatsAgg[0]?.s ?? '',
+            confirmed: true,
+            checkedIn: false,
+            createdBy: userId,
+            updatedBy: userId,
+          });
+        });
+
         return reply.code(200).send({ ...RES_SUCCESS, message: 'Tickets successfully booked', sequence_numbers });
-      } catch (e) {
-        await client.query('ROLLBACK');
+      } catch (e: any) {
+        const code = e?.statusCode ?? 500;
+        if (code === 400) return reply.code(400).send({ ...RES_ERROR, message: 'Invalid Entries' });
+        if (code === 409) return reply.code(409).send({ ...RES_ERROR, message: 'Already booked' });
         return reply.code(500).send({ ...RES_FAILURE, error: 'Error while booking tickets' });
-      } finally {
-        client.release();
       }
     },
   });
