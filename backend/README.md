@@ -7,7 +7,8 @@ Modernized backend using Fastify + TypeScript + Drizzle ORM + Zod.
 - TypeScript 5
 - Drizzle ORM (PostgreSQL)
 - Zod (validation, types)
-- Vitest (unit/e2e tests)
+- Vitest (unit)
+- Playwright (API e2e)
 - Docker and docker-compose
 
 ## Development
@@ -31,10 +32,23 @@ npm run drizzle:generate
 npm run drizzle:migrate
 ```
 
-4. Run tests:
-
+4. Tests
+- Unit tests:
 ```
-npm test
+npm run test:unit
+```
+- E2E (spins up ephemeral Postgres container, seeds data, starts server, produces HTML/JSON reports under `playwright-report/`):
+```
+npm run test:e2e
+```
+- All tests:
+```
+npm run test:all
+```
+
+Open HTML report:
+```
+npx playwright show-report playwright-report
 ```
 
 ## Production
